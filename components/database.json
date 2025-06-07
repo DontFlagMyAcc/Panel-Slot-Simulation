@@ -1,0 +1,72 @@
+[
+  {
+    "id": 1,
+    "username": "Tiger Nixon",
+    "credit": 121202,
+    "spin": 42,
+    "phone": "081789456123",
+    "creditAccumulation": 1500652,
+    "totalWin": 323145,
+    "winRate": "65%"
+  },
+  {
+    "id": 2,
+    "username": "Garrett Winters",
+    "credit": 170750,
+    "spin": 32,
+    "phone": "081234567890",
+    "creditAccumulation": 2000000,
+    "totalWin": 500000,
+    "winRate": "45%"
+  },
+  {
+    "id": 3,
+    "username": "Ashton Cox",
+    "credit": 86000,
+    "spin": 21,
+    "phone": "082345678901",
+    "creditAccumulation": 1200000,
+    "totalWin": -250145,
+    "winRate": "33%"
+  },
+  {
+    "id": 4,
+    "username": "Cedric Kelly",
+    "credit": 433060,
+    "spin": 18,
+    "phone": "083456789012",
+    "creditAccumulation": 3000000,
+    "totalWin": 1200000,
+    "winRate": "50%"
+  },
+  {
+    "id": 5,
+    "username": "Airi Satou",
+    "credit": 162700,
+    "spin": 25,
+    "phone": "084567890123",
+    "creditAccumulation": 1800000,
+    "totalWin": -400000,
+    "winRate": "45%"
+  },
+  {
+    "id": 6,
+    "username": "Brielle Williamson",
+    "credit": 372000,
+    "spin": 12,
+    "phone": "085678901234",
+    "creditAccumulation": 2500000,
+    "totalWin": -800000,
+    "winRate": "31%"
+  },
+  {
+    "id": 7,
+    "username": "Herrod Chandler",
+    "credit": 137500,
+    "spin": 15,
+    "phone": "086789012345",
+    "creditAccumulation": 1000000,
+    "totalWin": -200000,
+    "winRate": "40%"
+  }
+]

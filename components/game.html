@@ -1,0 +1,408 @@
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: white;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .wrapper {
+      display: flex;
+      gap: 40px;
+      max-width: 1200px;
+      width: 100%;
+    }
+
+    .config-panel {
+      width: 300px;
+      background: #1c1c1c;
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #333;
+    }
+
+    .config-panel h2 {
+      color: gold;
+      text-align: center;
+    }
+
+    .trigger-item {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    select, input[type="number"] {
+      padding: 5px;
+      font-size: 14px;
+      border-radius: 5px;
+      border: none;
+      width: 100%;
+    }
+
+    .btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      margin: 5px 0;
+      width: 100%;
+    }
+
+    .add-btn { background: #3498db; color: white; }
+    .reset-btn { background: #e74c3c; color: white; }
+    .reset-list-btn { background: #9b59b6; color: white; }
+
+    .trigger-list, .user-info {
+      font-size: 13px;
+      color: #ddd;
+      margin-top: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .slot-panel {
+      flex-grow: 1;
+      text-align: center;
+    }
+
+    .slot-panel h1 {
+      color: gold;
+    }
+
+    .slot-container {
+      display: grid;
+      grid-template-columns: repeat(5, 80px);
+      gap: 6px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .slot {
+      width: 80px;
+      height: 80px;
+      background: #222;
+      font-size: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      border: 2px solid #555;
+    }
+
+    .spin-btn {
+      background: #2ecc71;
+      color: white;
+    }
+
+    .result {
+      font-size: 22px;
+      margin-top: 10px;
+      font-weight: bold;
+      color: #00e676;
+    }
+
+    .counter {
+      font-size: 18px;
+      margin-top: 10px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 100;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.7);
+    }
+
+    @keyframes spinEffect {
+      0%   { transform: rotateX(0deg); }
+      100% { transform: rotateX(360deg); }
+    }
+
+    .slot.spin {
+      animation: spinEffect 0.5s ease-in-out;
+    }
+
+    .modal-content {
+      background-color: #1c1c1c;
+      margin: 10% auto;
+      padding: 20px;
+      border: 1px solid #444;
+      width: 90%;
+      max-width: 400px;
+      border-radius: 10px;
+      color: white;
+      font-size: 14px;
+    }
+
+    .close-btn {
+      color: gold;
+      float: right;
+      font-size: 22px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .info-btn {
+      background: #f1c40f;
+      color: black;
+      font-weight: bold;
+}
+
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <!-- Panel Kiri -->
+    <div class="config-panel">
+      <h2>⚙️ Configuration</h2>
+      <button class="btn info-btn" onclick="openInfoModal()">ℹ️ Info</button>
+      <select id="userSelect" onchange="displayUserInfo()"></select>
+      <div class="user-info" id="userInfo">Loading user...</div>
+      <hr />
+      <div class="trigger-item">
+        <select id="winTypeSelect">
+          <option value="Nice">Nice Win</option>
+          <option value="Mega">Mega Win</option>
+          <option value="Super">Super Win</option>
+          <option value="Superb">Superb Win</option>
+          <option value="Sensational">Sensational Win</option>
+          <option value="Max Win">Max Win</option>
+          <option value="Free Spin">Free Spin</option>
+        </select>
+      </div>
+      <div class="trigger-item">
+        <input type="number" id="spinNumberInput" min="1" placeholder="Spin keberapa" />
+      </div>
+      <button class="btn add-btn" onclick="addTrigger()">Add Trigger</button>
+      <button class="btn reset-list-btn" onclick="resetTriggerList()">Reset List Trigger</button>
+      <hr />
+      <div class="trigger-list" id="triggerListDisplay">🎯 List Trigger: (empty)</div>
+    </div>
+
+    <!-- Panel Kanan -->
+    <div class="slot-panel">
+      <h1>🎰 Slot Simulation</h1>
+      <div class="slot-container" id="slotContainer"></div>
+      <div class="counter">Spin count : <span id="spinCount">0</span></div>
+      <button class="btn spin-btn" onclick="spin()">🎲 Spin</button>
+      <button class="btn reset-btn" onclick="resetSpin()">🔄 Reset Spin</button>
+      <div class="result" id="resultText"></div>
+    </div>
+  </div>
+
+  <script>
+    const symbols = ["🍒", "🍋", "🍇", "💎", "7️⃣", "🍉"];
+    const SCATTER_SYMBOL = "🌀";
+    const slots = [];
+    let spinCount = 0;
+    let winTriggers = [];
+    let users = [];
+
+    const container = document.getElementById("slotContainer");
+    const resultText = document.getElementById("resultText");
+    const spinCounter = document.getElementById("spinCount");
+    const triggerListDisplay = document.getElementById("triggerListDisplay");
+    const userSelect = document.getElementById("userSelect");
+    const userInfo = document.getElementById("userInfo");
+
+    for (let i = 0; i < 25; i++) {
+      const div = document.createElement("div");
+      div.className = "slot";
+      div.textContent = "❓";
+      container.appendChild(div);
+      slots.push(div);
+    }
+
+    function addTrigger() {
+      const type = document.getElementById("winTypeSelect").value;
+      const spinNum = parseInt(document.getElementById("spinNumberInput").value);
+      if (!spinNum || spinNum < 1) return alert("Spin harus minimal 1!");
+      winTriggers.push({ spin: spinNum, type });
+      updateTriggerDisplay();
+    }
+
+    function updateTriggerDisplay() {
+      if (winTriggers.length === 0) {
+        triggerListDisplay.textContent = "🎯 List Trigger: (Kosong)";
+        return;
+      }
+      triggerListDisplay.innerHTML = "🎯 List Trigger:<br>" + winTriggers.map(t => `Spin ${t.spin} → ${t.type}`).join("<br>");
+    }
+
+    function resetTriggerList() {
+      winTriggers = [];
+      updateTriggerDisplay();
+    }
+
+    function resetSpin() {
+      spinCount = 0;
+      spinCounter.textContent = "0";
+      resultText.textContent = "🔄 Spin direset!";
+      slots.forEach(slot => {
+        slot.textContent = "❓";
+        slot.style.backgroundColor = "#222"; // reset warna juga di sini
+      });
+    }
+
+    function spin() {
+      spinCount++;
+      spinCounter.textContent = spinCount;
+      resultText.textContent = "";
+
+      // 🔄 Reset semua warna dan isi slot
+      slots.forEach(slot => {
+        slot.classList.add('spin');
+        slot.textContent = "❓";
+        slot.style.backgroundColor = "#222"; // reset warna latar
+        setTimeout(() => {
+          slots.forEach(slot => {
+            slot.classList.remove('spin');
+          });
+        }, 500); // Waktu sesuai durasi animasi (0.5s)
+      });
+
+      // Cek apakah ada trigger untuk spin ini
+      const matched = winTriggers.find(t => t.spin === spinCount);
+      if (matched) {
+        switch (matched.type) {
+          case "Free Spin": applyFreeSpin(); break;
+          default: applyPresetWin(matched.type); break;
+        }
+      } else {
+        slots.forEach(slot => {
+          const sym = symbols[Math.floor(Math.random() * symbols.length)];
+          slot.textContent = sym;
+        });
+      }
+    }
+
+    function applyPresetWin(type) {
+      resultText.textContent = `🎉 ${type} Win!`;
+
+      // Peta jenis win ke simbol yang harus muncul
+      const typeSymbolMap = {
+        "Nice": "🍒",
+        "Mega": "🍉",
+        "Super": "🍋",
+        "Superb": "🍇",
+        "Sensational": "7️⃣"
+      };
+
+      const symbol = typeSymbolMap[type] || "💎";
+
+      // Reset tampilan
+      slots.forEach(slot => {
+        slot.style.backgroundColor = "#222";
+      });
+
+      // Acak posisi untuk simbol kemenangan
+      const totalWinSymbols = Math.floor(Math.random() * 5) + 10; // antara 10–14
+      const availableIndices = Array.from({ length: 25 }, (_, i) => i);
+      const winIndices = [];
+
+      while (winIndices.length < totalWinSymbols) {
+        const randIndex = Math.floor(Math.random() * availableIndices.length);
+        const selected = availableIndices.splice(randIndex, 1)[0];
+        winIndices.push(selected);
+      }
+
+      // Tampilkan simbol
+      slots.forEach((slot, i) => {
+        if (winIndices.includes(i)) {
+          slot.textContent = symbol;
+          slot.style.backgroundColor = "#3498db"; // biru
+        } else {
+          // Hindari simbol kemenangan muncul di posisi lain
+          const otherSymbols = symbols.filter(sym => sym !== symbol);
+          slot.textContent = otherSymbols[Math.floor(Math.random() * otherSymbols.length)];
+        }
+      });
+    }
+
+    function applyFreeSpin() {
+      resultText.textContent = "🌀 FREE SPIN Triggered!";
+      
+      // Reset isi slot dengan simbol random biasa
+      slots.forEach(slot => {
+        slot.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+        slot.style.backgroundColor = "#222"; // reset warna
+      });
+
+      // Tambahkan 1 SCATTER per kolom (5 kolom)
+      for (let col = 0; col < 5; col++) {
+        const row = Math.floor(Math.random() * 5); // pilih 1 dari 5 baris
+        const index = row * 5 + col; // konversi posisi 2D ke index 1D
+        slots[index].textContent = SCATTER_SYMBOL;
+        slots[index].style.backgroundColor = "#3498db";
+      }
+    }
+
+    async function loadUsers() {
+      const res = await fetch('database.json');
+      users = await res.json();
+      userSelect.innerHTML = '<option disabled selected>Choose User</option>';
+      users.forEach(user => {
+        const opt = document.createElement("option");
+        opt.value = user.id;
+        opt.textContent = `${user.username}`;
+        userSelect.appendChild(opt);
+      });
+    }
+
+    function displayUserInfo() {
+      const selectedId = parseInt(userSelect.value);
+      const user = users.find(u => u.id === selectedId);
+      if (user) {
+        userInfo.innerHTML = `👤 <strong>${user.username}</strong><br>💰 Credit: <strong>${user.credit}</strong><br>🎯 Spin: <strong>${user.spin}</strong>`;
+      }
+    }
+
+    loadUsers();
+
+    function openInfoModal() {
+      document.getElementById("infoModal").style.display = "block";
+    }
+
+    function closeInfoModal() {
+      document.getElementById("infoModal").style.display = "none";
+    }
+
+    // Optional: Tutup modal jika klik di luar area konten
+    window.onclick = function(event) {
+      const modal = document.getElementById("infoModal");
+      if (event.target === modal) {
+        modal.style.display = "none";
+      }
+    }
+
+  </script>
+
+  <!-- Modal Info -->
+  <div id="infoModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeInfoModal()">&times;</span>
+      <h3>📜 Winning Conditions</h3>
+      <ul>
+        <li><strong>Nice Win</strong> : 🍒 min 10</li>
+        <li><strong>Mega Win</strong> : 🍉 min 10</li>
+        <li><strong>Super Win</strong> : 🍋 min 10</li>
+        <li><strong>Superb Win</strong> : 🍇 min 10</li>
+        <li><strong>Sensational Win</strong> : 7️⃣ min 10</li>
+        <li><strong>Max Win</strong> : 💎 min 10</li>
+        <li><strong>Free Spin</strong> : 🌀 5</li>
+      </ul>
+    </div>
+  </div>
+
+</body>

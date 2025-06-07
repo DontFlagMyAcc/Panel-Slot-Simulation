@@ -1,0 +1,5 @@
+[
+  { "id": 1, "username": "userA", "credit": 100000, "spin": 42, "phone": "089123456789" },
+  { "id": 2, "username": "userB", "credit": 200000, "spin": 32, "phone": "085123456789" },
+  { "id": 3, "username": "userC", "credit": 150000, "spin": 21, "phone": "083123456789" }
+]

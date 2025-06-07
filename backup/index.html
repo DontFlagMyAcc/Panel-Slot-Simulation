@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Slot Simulator 5x5 - Configurable</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: white;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .wrapper {
+      display: flex;
+      gap: 40px;
+      max-width: 1200px;
+      width: 100%;
+    }
+
+    .config-panel {
+      width: 300px;
+      background: #1c1c1c;
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #333;
+    }
+
+    .config-panel h2 {
+      color: gold;
+      text-align: center;
+    }
+
+    .trigger-item {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    select, input[type="number"] {
+      padding: 5px;
+      font-size: 14px;
+      border-radius: 5px;
+      border: none;
+      width: 100%;
+    }
+
+    .btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      margin: 5px 0;
+      width: 100%;
+    }
+
+    .add-btn { background: #3498db; color: white; }
+    .reset-btn { background: #e74c3c; color: white; }
+    .reset-list-btn { background: #9b59b6; color: white; }
+
+    .trigger-list, .user-info {
+      font-size: 13px;
+      color: #ddd;
+      margin-top: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .slot-panel {
+      flex-grow: 1;
+      text-align: center;
+    }
+
+    .slot-panel h1 {
+      color: gold;
+    }
+
+    .slot-container {
+      display: grid;
+      grid-template-columns: repeat(5, 80px);
+      gap: 6px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .slot {
+      width: 80px;
+      height: 80px;
+      background: #222;
+      font-size: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      border: 2px solid #555;
+    }
+
+    .spin-btn {
+      background: #2ecc71;
+      color: white;
+    }
+
+    .result {
+      font-size: 22px;
+      margin-top: 10px;
+      font-weight: bold;
+      color: #00e676;
+    }
+
+    .counter {
+      font-size: 18px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <!-- Panel Kiri -->
+    <div class="config-panel">
+      <h2>⚙️ Konfigurasi</h2>
+      <select id="userSelect" onchange="displayUserInfo()"></select>
+      <div class="user-info" id="userInfo">Memuat user...</div>
+      <hr />
+      <div class="trigger-item">
+        <select id="winTypeSelect">
+          <option value="Nice">Nice</option>
+          <option value="Mega">Mega</option>
+          <option value="Super">Super</option>
+          <option value="Superb">Superb</option>
+          <option value="Sensational">Sensational</option>
+          <option value="Max Win">Max Win</option>
+          <option value="Free Spin">Free Spin</option>
+        </select>
+      </div>
+      <div class="trigger-item">
+        <input type="number" id="spinNumberInput" min="1" placeholder="Spin keberapa" />
+      </div>
+      <button class="btn add-btn" onclick="addTrigger()">Tambah Trigger</button>
+      <button class="btn reset-list-btn" onclick="resetTriggerList()">Reset List Trigger</button>
+      <hr />
+      <div class="trigger-list" id="triggerListDisplay">🎯 List Trigger: (Kosong)</div>
+    </div>
+
+    <!-- Panel Kanan -->
+    <div class="slot-panel">
+      <h1>🎰 Slot 5x5</h1>
+      <div class="slot-container" id="slotContainer"></div>
+      <div class="counter">Spin ke: <span id="spinCount">0</span></div>
+      <button class="btn spin-btn" onclick="spin()">🎲 Spin</button>
+      <button class="btn reset-btn" onclick="resetSpin()">🔄 Reset Spin</button>
+      <div class="result" id="resultText"></div>
+    </div>
+  </div>
+
+  <script>
+    const symbols = ["🍒", "🍋", "🍇", "💎", "7️⃣", "🔔", "🍉"];
+    const SCATTER_SYMBOL = "🌀";
+    const slots = [];
+    let spinCount = 0;
+    let winTriggers = [];
+    let users = [];
+
+    const container = document.getElementById("slotContainer");
+    const resultText = document.getElementById("resultText");
+    const spinCounter = document.getElementById("spinCount");
+    const triggerListDisplay = document.getElementById("triggerListDisplay");
+    const userSelect = document.getElementById("userSelect");
+    const userInfo = document.getElementById("userInfo");
+
+    for (let i = 0; i < 25; i++) {
+      const div = document.createElement("div");
+      div.className = "slot";
+      div.textContent = "❓";
+      container.appendChild(div);
+      slots.push(div);
+    }
+
+    function addTrigger() {
+      const type = document.getElementById("winTypeSelect").value;
+      const spinNum = parseInt(document.getElementById("spinNumberInput").value);
+      if (!spinNum || spinNum < 1) return alert("Spin harus minimal 1!");
+      winTriggers.push({ spin: spinNum, type });
+      updateTriggerDisplay();
+    }
+
+    function updateTriggerDisplay() {
+      if (winTriggers.length === 0) {
+        triggerListDisplay.textContent = "🎯 List Trigger: (Kosong)";
+        return;
+      }
+      triggerListDisplay.innerHTML = "🎯 List Trigger:<br>" + winTriggers.map(t => `Spin ${t.spin} → ${t.type}`).join("<br>");
+    }
+
+    function resetTriggerList() {
+      winTriggers = [];
+      updateTriggerDisplay();
+    }
+
+    function resetSpin() {
+      spinCount = 0;
+      spinCounter.textContent = "0";
+      resultText.textContent = "🔄 Spin direset!";
+      slots.forEach(slot => slot.textContent = "❓");
+    }
+
+    function spin() {
+      spinCount++;
+      spinCounter.textContent = spinCount;
+      resultText.textContent = "";
+
+      const matched = winTriggers.find(t => t.spin === spinCount);
+      if (matched) {
+        switch (matched.type) {
+          case "Max Win": applyMaxWin(); break;
+          case "Free Spin": applyFreeSpin(); break;
+          default: applyPresetWin(matched.type); break;
+        }
+      } else {
+        slots.forEach(slot => {
+          const sym = symbols[Math.floor(Math.random() * symbols.length)];
+          slot.textContent = sym;
+        });
+      }
+    }
+
+    function applyPresetWin(type) {
+      resultText.textContent = `🎉 ${type} Win!`;
+      slots.forEach((slot, i) => {
+        slot.textContent = (i % 2 === 0) ? "💎" : "🍋";
+      });
+    }
+
+    function applyMaxWin() {
+      resultText.textContent = "💥 MAX WIN 💥";
+      slots.forEach(slot => slot.textContent = "💎");
+    }
+
+    function applyFreeSpin() {
+      resultText.textContent = "🌀 FREE SPIN Triggered!";
+      slots.forEach(slot => {
+        slot.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+      });
+      const count = Math.floor(Math.random() * 4) + 4;
+      const indices = new Set();
+      while (indices.size < count) {
+        indices.add(Math.floor(Math.random() * 25));
+      }
+      indices.forEach(i => slots[i].textContent = SCATTER_SYMBOL);
+    }
+
+    async function loadUsers() {
+      const res = await fetch('database.json');
+      users = await res.json();
+      userSelect.innerHTML = '<option disabled selected>Pilih User</option>';
+      users.forEach(user => {
+        const opt = document.createElement("option");
+        opt.value = user.id;
+        opt.textContent = `${user.username} (ID: ${user.id})`;
+        userSelect.appendChild(opt);
+      });
+    }
+
+    function displayUserInfo() {
+      const selectedId = parseInt(userSelect.value);
+      const user = users.find(u => u.id === selectedId);
+      if (user) {
+        userInfo.innerHTML = `👤 <strong>${user.username}</strong><br>💰 Credit: <strong>${user.credit}</strong><br>🎯 Spin: <strong>${user.spin}</strong>`;
+      }
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>
